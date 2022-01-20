@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  BOT_NAME: test
+  MODEL_ENDPOINT: https://ic-storage.vnpt.vn
+kind: ConfigMap
+metadata:
+  name: test-configmaps
