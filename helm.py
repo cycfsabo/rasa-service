@@ -1,5 +1,4 @@
 import subprocess
-from importlib_metadata import metadata
 import yaml
 import json
 
@@ -81,39 +80,34 @@ def customize_deployment(file_path, service_name, image_name, image_tag, port):
             'helm.sh/chart': service_name+'-0.1.0'
         }
 
-    deployment_data = {'apiVersion': 'apps/v1', 
-                        'kind': 'Deployment',
-                        'metadata': {
-                            'name': service_name,
-                            'labels': labels,
-                        }, 'spec': {
-                            'replicas': 1,
-                            'selector': {
-                                'matchLabels': labels
+    deployment_data = {
+                        "apiVersion": "apps/v1",
+                        "kind": "Deployment",
+                        "metadata": {
+                            "name": service_name,
+                            "labels": labels,
+                        },
+                        "spec": {
+                            "replicas": 1,
+                            "selector": {"matchLabels": labels},
+                            "template": {
+                                "metadata": {"labels": labels},
+                                "spec": {
+                                    "containers": [
+                                        {
+                                            "envFrom": [
+                                                {"configMapRef": {"name": service_name "-configmaps"}}
+                                            ],
+                                            "image": image_name + ":" + image_tag,
+                                            "name": service_name + "-container",
+                                            "ports": [{"containerPort": port, "name": "http"}],
+                                        }
+                                    ],
+                                    "serviceAccountName": service_name,
                                 },
-                                'template': {
-                                    'metadata': {
-                                        'labels': labels
-                                    },
-                                    'spec':{
-                                        'containers': [{
-                                                'envFrom':[{
-                                                    'configMapRef': {
-                                                        'name': service_name+'-configmaps'
-                                                    }
-                                                }],
-                                                'image': image_name + ":" + image_tag,
-                                                'name': service_name + '-container',
-                                                'ports':[{
-                                                    'containerPort': port,
-                                                    'name': 'http'
-                                                }]
-                                    }],
-                                        'serviceAccountName': service_name
-                                    }
-                                }
-                        }
-                        }
+                            },
+                        },
+                    }
     write_yaml_file(file_path, deployment_data)
 
 
