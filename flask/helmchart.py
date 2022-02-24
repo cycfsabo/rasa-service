@@ -101,7 +101,7 @@ class HelmChart:
                                                 "command": ["./run_node.sh"],
                                                 "image": self.image_name + ":" + self.image_tag,
                                                 "name": self.service_name + "-container",
-                                                "ports": [{"containerPort": self.port, "name": "http"}],
+                                                "ports": [{"containerPort": self.port, "name": "port05"},{"containerPort": 5006, "name": "port06"}],
                                             }
                                         ],
                                         "serviceAccountName": self.service_name,
