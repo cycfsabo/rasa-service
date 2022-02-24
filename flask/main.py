@@ -1,5 +1,6 @@
 # from black import re
 # from pyrsistent import PTypeError
+from crypt import methods
 from helmchart import *
 from flask import *
 
@@ -54,6 +55,14 @@ def delete_service():
     try:
         run_command(bashCommand= "helm uninstall", service_name= data['service_name'], namespace= data['namespace'])
         return "Success!"
+    except:
+        return "Error!"
+
+@app.route("/list",methods=['GET'])
+def list_service():
+    namespace = request.args.get('ns')
+    try:
+        return run_command(bashCommand= "helm list", namespace= namespace)
     except:
         return "Error!"
 

@@ -11,9 +11,11 @@ def run_command(bashCommand, service_name="", namespace="",):
         bashCommand = bashCommand + " " + service_name + " " +file_path + " -n " + namespace
     elif bashCommand == "helm uninstall":
         bashCommand = bashCommand + " " + service_name + " -n " + namespace
-    print(bashCommand)
+    elif bashCommand == "helm list":
+        bashCommand = bashCommand + " -n " + namespace
     process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
-    output, error = process.communicate()
+    output = subprocess.check_output(('awk','NR>1 {print $1}'),stdin=process.stdout)
+    return output
 
 def read_yaml_file(file_path):
     with open(file_path) as f:
@@ -50,11 +52,10 @@ class HelmChart:
     def helm_uninstall(self):
         run_command(bashCommand= "helm uninstall", service_name= self.service_name, namespace= self.namespace)
 
-
     def create_configmaps(self):
         file_path = "./" + self.service_name + "/templates/configmaps.yaml"
         configmaps_data = {'apiVersion': 'v1', 'kind': 'ConfigMap', 'metadata': {
-            'name': self.service_name+'-configmaps'}, 'data': {'MODEL_ENDPOINT': self.model_endpoint, 'BOT_NAME': self.service_name}}
+            'name': self.service_name+'-configmaps'}, 'data': {'MODEL_ENDPOINT': self.model_endpoint, 'BOT_NAME': self.service_name, 'NODE_PORT': '5006', 'REDIS_CHAT_HOST': 'rasa-instances-redis', 'REDIS_HOST': 'rasa-instances-redis', 'REDIS_NODE_DB': '3'}}
         write_yaml_file(file_path, configmaps_data)
 
     def customize_values(self):
@@ -97,6 +98,7 @@ class HelmChart:
                                                 "envFrom": [
                                                     {"configMapRef": {"name": self.service_name + "-configmaps"}}
                                                 ],
+                                                "command": ["./run_node.sh"],
                                                 "image": self.image_name + ":" + self.image_tag,
                                                 "name": self.service_name + "-container",
                                                 "ports": [{"containerPort": self.port, "name": "http"}],
